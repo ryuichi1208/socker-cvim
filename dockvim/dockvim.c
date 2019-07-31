@@ -10,7 +10,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <getopt.h>
+
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <sys/stat.h>
 
 /*
@@ -35,12 +37,14 @@ typedef struct namespace {
     char *type;
 } namespace;
 
-void err_exit(char *msg, int err) {
+void err_exit(char *msg, int err)
+{
     perror(msg);
     exit(1);
 }
 
-int get_container_pid(char *container_name) {
+int get_container_pid(char *container_name)
+{
     int fd;
     int ret;
     u_32 pid;
@@ -76,7 +80,8 @@ int get_container_pid(char *container_name) {
 
 }
 
-void open_namespace(namespace *n) {
+void open_namespace(namespace *n)
+{
     u_16 i;
     int fd;
     char procfile[2][64];
@@ -86,9 +91,27 @@ void open_namespace(namespace *n) {
     }
 }
 
-int main(int argc, char **argv) {
+void checl_enviroment()
+{
+    int ret;
+    struct utsname s;
+
+	ret = uname(&s);
+    if (ret) {
+        err_exit("failed uname", errno);
+    }
+
+    if (strcmp(s.sysname, "Linux")) {
+        err_exit("Not supported OS", errno);
+    }
+}
+
+int main(int argc, char **argv)
+{
     u_16 i;
     namespace *n = malloc(sizeof(namespace) * 2);
+
+    checl_enviroment();
 
     for (i = 0; i < 2; i++) {
         (n+i)->pid = 20;
