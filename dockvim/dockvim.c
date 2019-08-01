@@ -7,6 +7,7 @@
  *
  */
 
+/* header files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sched.h>
@@ -74,6 +75,17 @@ typedef struct namespace {
 
 void info(const char *fmt, ...);
 void error(const char *fmt, ...) __attribute__((noreturn));
+
+/*
+ * Print usage()
+ */
+void usage()
+{
+    fprintf(stdout, "Usage : %s [CONTAINERNAME|CONTAINERID] filepath\n", pbi.__program_name);
+    fprintf(stdout, "\n");
+    fprintf(stdout, "RUN %s --help\n", pbi.__program_name);
+    fflush(stdout);
+}
 
 /*
  * Error end function. Exit status is 1 by default.
@@ -214,7 +226,7 @@ int main(int argc, char **argv)
     //check_enviroment();
 
     if (argc != 2) {
-        fprintf(stderr, "Usage : %s [CONTAINERNAME|CONTAINERID] filepath\n");
+        usage();
         exit(1);
     }
 
