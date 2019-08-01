@@ -23,11 +23,14 @@
 /*
 #include <linux/errno.h>
 #include <linux/types.h>
+#include <xen/interface/platform.h>
+#include <asm/xen/hypercall.h>
 */
 
-typedef unsigned short u_16;
-typedef unsigned int u_32;
-typedef unsigned long long int u_64;
+typedef unsigned char           u_8;
+typedef unsigned short          u_16;
+typedef unsigned int            u_32;
+typedef unsigned long long int  u_64;
 
 #undef DEBUG
 
@@ -36,6 +39,10 @@ typedef unsigned long long int u_64;
 #else
 #define dprintf(x...)
 #endif
+
+#define MAX_CMD_LEN 64
+#define MAX_FILE_NAME_LEN 64
+#define DEFAULT_BUF_SIZE 256
 
 /*
  * program structure
@@ -65,6 +72,13 @@ typedef struct namespace {
     char *exec_user;
 } namespace;
 
+void info(const char *fmt, ...);
+void error(const char *fmt, ...) __attribute__((noreturn));
+
+/*
+ * Error end function. Exit status is 1 by default.
+ * Changeable by argument
+ */
 void err_exit(char *msg, int err)
 {
     perror(msg);
@@ -77,10 +91,10 @@ int get_container_pid(char *container_name)
     int ret;
     u_32 pid;
     char *endptr;
-    char dock_cmd[64];
-    char tmp_file[64];
-    char exec_cmd[128];
-    char pid_buf[16];
+    char dock_cmd[MAX_CMD_LEN];
+    char tmp_file[MAX_FILE_NAME_LEN];
+    char exec_cmd[MAX_CMD_LEN];
+    char pid_buf[DEFAULT_BUF_SIZE];
     struct stat stat_buf;
 
     sprintf(dock_cmd, "docker container inspect %s --format={{.State.Pid}}", container_name);
@@ -184,7 +198,7 @@ void check_enviroment()
 void setns_proccess(int fd)
 {
     int ret;
-    ret = setns(fd, 0);
+    //ret = setns(fd, CLONE_NEWNS|CLONE_NEWPID);
     if (ret == -1)
         err_exit("Failed setns(2)", errno);
 }
