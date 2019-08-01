@@ -2,7 +2,7 @@
  *
  * This software may be freely redistributed under the terms of the
  * GNU General Public License.
- * 
+ *
  * Written by ryuichi1208 (ryucrosskey@gmail.com)
  *
  */
@@ -37,10 +37,10 @@ typedef unsigned long long int u_64;
 #define dprintf(x...)
 #endif
 
-/* 
+/*
  * Namespace structure
  * Execute setns (2) based on this data
- */ 
+ */
 typedef struct namespace {
     int fd;
     int pid;
@@ -85,13 +85,17 @@ int get_container_pid(char *container_name)
     if (ret)
         err_exit("failed stat", errno);
 
-    /* 
+    /*
      * Get pid from a file under /tmp
      */
     ret = read(fd, pid_buf, stat_buf.st_size);
     if (ret == -1)
         err_exit("failed read", errno);
 
+    /*
+     * Returns the container's PID as an int
+     * For type conversion, execute with strol(3)
+     */
     pid = strtol(pid_buf, &endptr, 10);
     return pid;
 }
@@ -101,11 +105,14 @@ void set_namespace_info(namespace *n, int pid)
     /*
      * Get PID running this program
      * Rewrite container not file based on this information
-     */ 
+     */
     n->pid = getpid();
     n->type = "mnt";
 
-    // コンテナのネームスペース情報を保持
+    /*
+     * Map container information to namespace structure
+     * After execution, also acquire the state of the container
+     */
     (n+1)->pid = pid;
     (n+1)->type = "mnt";
 
@@ -118,7 +125,9 @@ void open_namespace(namespace *n, char *container_name)
     int fd;
     char procfile[2][64];
 
-    // Get the PID of the target container
+    /*
+     * Get the PID of the target container
+     */
     pid = get_container_pid(container_name);
 
     set_namespace_info(n, pid);
@@ -127,13 +136,19 @@ void open_namespace(namespace *n, char *container_name)
         sprintf(*(procfile+i), "/proc/%d/ns/%s", (n+i)->pid, (n+i)->type);
         printf("Open namespaces file : %s\n", (procfile+i));
 
-        // Open namespace of execution process / container
+        /*
+         * Open namespace of execution process / container
+         */
         (n+i)->fd = open(*(procfile+i), O_RDONLY|O_EXCL);
         if ((n+i)->fd == -1)
             err_exit("failed open", errno);
     }
 }
 
+/*
+ * Setns(2) is required for program execution.
+ * Therefore, support is not supported except for Linux
+ */
 void check_enviroment()
 {
     int ret;
@@ -167,7 +182,9 @@ int main(int argc, char **argv)
     container_name = argv[1];
     filepath 	  = argv[2];
 
-    // 対象コンテナのネームスペース情報を取得する
+    /*
+     * Get namespace information of the target container.
+     */
     n = malloc(sizeof(namespace) * 2);
     open_namespace(n, container_name);
 
