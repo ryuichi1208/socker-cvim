@@ -32,6 +32,10 @@ typedef unsigned long long int u_64;
 #define dprintf(x...)
 #endif
 
+/* 
+ * Namespace structure
+ * Execute setns (2) based on this data
+ */ 
 typedef struct namespace {
     int fd;
     int pid;
@@ -60,7 +64,10 @@ int get_container_pid(char *container_name)
     sprintf(tmp_file, "/tmp/%s_%d.tmp", container_name, getpid());
     sprintf(exec_cmd, "%s > %s", dock_cmd, tmp_file);
 
-    // コンテナのプロセスIDを取得し、tmp配下へ書き出す
+    /*
+     * Get the process ID of the container.
+     * Also, the acquired information is written to a file under /tmp
+     */
     ret = system(exec_cmd);
     if (ret != 0)
         err_exit("failed system", errno);
@@ -73,6 +80,9 @@ int get_container_pid(char *container_name)
     if (ret)
         err_exit("failed stat", errno);
 
+    /* 
+     * Get pid from a file under /tmp
+     */
     ret = read(fd, pid_buf, stat_buf.st_size);
     if (ret == -1)
         err_exit("failed read", errno);
@@ -83,7 +93,10 @@ int get_container_pid(char *container_name)
 
 void set_namespace_info(namespace *n, int pid)
 {
-    // 現在のネームスペースの情報を保持
+    /*
+     * Get PID running this program
+     * Rewrite container not file based on this information
+     */ 
     n->pid = getpid();
     n->type = "mnt";
 
@@ -100,7 +113,7 @@ void open_namespace(namespace *n, char *container_name)
     int fd;
     char procfile[2][64];
 
-    // 対象のコンテナのPIDを取得する
+    // Get the PID of the target container
     pid = get_container_pid(container_name);
 
     set_namespace_info(n, pid);
@@ -109,7 +122,7 @@ void open_namespace(namespace *n, char *container_name)
         sprintf(*(procfile+i), "/proc/%d/ns/%s", (n+i)->pid, (n+i)->type);
         printf("Open namespaces file : %s\n", (procfile+i));
 
-        // ネームスペースを保持しておく
+        // Open namespace of execution process / container
         (n+i)->fd = open(*(procfile+i), O_RDONLY|O_EXCL);
         if ((n+i)->fd == -1)
             err_exit("failed open", errno);
