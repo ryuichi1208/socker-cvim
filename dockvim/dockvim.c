@@ -38,6 +38,23 @@ typedef unsigned long long int u_64;
 #endif
 
 /*
+ * program structure
+ * Structure to hold basic information of program
+ * Information for use in usage etc.
+ */
+typedef struct program_base_info {
+    float __version;
+    char *__program_name;
+    char *__author;
+} program_base_info;
+
+const static struct program_base_info pbi = {
+    .__version      = 1.0,
+    .__program_name = "dockvim",
+    .__author       = "ryucihi1208",
+};
+
+/*
  * Namespace structure
  * Execute setns (2) based on this data
  */
@@ -45,6 +62,7 @@ typedef struct namespace {
     int fd;
     int pid;
     char *type;
+    char *exec_user;
 } namespace;
 
 void err_exit(char *msg, int err)
@@ -134,7 +152,6 @@ void open_namespace(namespace *n, char *container_name)
 
     for (i = 0; i < 2; i++) {
         sprintf(*(procfile+i), "/proc/%d/ns/%s", (n+i)->pid, (n+i)->type);
-        printf("Open namespaces file : %s\n", (procfile+i));
 
         /*
          * Open namespace of execution process / container
@@ -180,7 +197,7 @@ int main(int argc, char **argv)
     }
 
     container_name = argv[1];
-    filepath 	  = argv[2];
+    filepath 	   = argv[2];
 
     /*
      * Get namespace information of the target container.
