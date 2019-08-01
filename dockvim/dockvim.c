@@ -181,6 +181,14 @@ void check_enviroment()
     }
 }
 
+void setns_proccess(int fd)
+{
+    int ret;
+    ret = setns(fd, 0);
+    if (ret == -1)
+        err_exit("Failed setns(2)", errno);
+}
+
 int main(int argc, char **argv)
 {
     u_16 i;
