@@ -1,5 +1,10 @@
 /*
+ *
+ * This software may be freely redistributed under the terms of the
+ * GNU General Public License.
+ * 
  * Written by ryuichi1208 (ryucrosskey@gmail.com)
+ *
  */
 
 #include <stdio.h>
